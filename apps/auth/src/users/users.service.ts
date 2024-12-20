@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { RegisterDto } from './dto/users.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -15,5 +16,17 @@ export class UsersService {
       ...user,
       role: 'MEMBER',
     });
+  }
+
+  async validateUser(email: string, password: string) {
+    const user = await this.usersRepository.findOne({ email });
+
+    const password_hash = await bcrypt.hash(password, 10);
+
+    if (!user || !(await bcrypt.compare(password, password_hash))) {
+      return null;
+    }
+
+    return user;
   }
 }
