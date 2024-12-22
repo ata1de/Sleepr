@@ -15,6 +15,7 @@ export class UsersService {
     return this.usersRepository.create({
       ...user,
       role: 'MEMBER',
+      password: await bcrypt.hash(user.password, 10),
     });
   }
 
