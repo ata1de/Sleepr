@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { RegisterDto } from './dto/users.dto';
 import * as bcrypt from 'bcrypt';
+import { GetUserDto } from './dto/get-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -12,11 +13,21 @@ export class UsersService {
   }
 
   async create(user: RegisterDto) {
+    await this.validateCreateUser(user);
+
     return this.usersRepository.create({
       ...user,
       role: 'MEMBER',
       password: await bcrypt.hash(user.password, 10),
     });
+  }
+
+  async validateCreateUser(user: RegisterDto) {
+    const existingUser = await this.findOneByEmail(user.email);
+
+    if (existingUser) {
+      throw new UnprocessableEntityException('Invalid Credentials');
+    }
   }
 
   async validateUser(email: string, password: string) {
@@ -29,5 +40,9 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  async getUserById({ id }: GetUserDto) {
+    return this.usersRepository.findOne({ _id: id });
   }
 }
